@@ -1,0 +1,95 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: guess-game-frontend:1.0.0
+    container_name: guess-game-frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend-1
+      - backend-2
+      - backend-3
+    restart: always
+    networks:
+      - guess-net
+
+  backend-1:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    image: guess-game-backend:1.0.0
+    container_name: guess-game-backend-1
+    environment:
+      FLASK_DB_TYPE: postgres
+      FLASK_DB_USER: postgres
+      FLASK_DB_NAME: postgres
+      FLASK_DB_PASSWORD: secretpass
+      FLASK_DB_HOST: postgres
+      FLASK_DB_PORT: 5432
+    expose:
+      - "5000"
+    depends_on:
+      - postgres
+    restart: always
+    networks:
+      - guess-net
+
+  backend-2:
+    image: guess-game-backend:1.0.0
+    container_name: guess-game-backend-2
+    environment:
+      FLASK_DB_TYPE: postgres
+      FLASK_DB_USER: postgres
+      FLASK_DB_NAME: postgres
+      FLASK_DB_PASSWORD: secretpass
+      FLASK_DB_HOST: postgres
+      FLASK_DB_PORT: 5432
+    expose:
+      - "5000"
+    depends_on:
+      - postgres
+      - backend-1
+    restart: always
+    networks:
+      - guess-net
+
+  backend-3:
+    image: guess-game-backend:1.0.0
+    container_name: guess-game-backend-3
+    environment:
+      FLASK_DB_TYPE: postgres
+      FLASK_DB_USER: postgres
+      FLASK_DB_NAME: postgres
+      FLASK_DB_PASSWORD: secretpass
+      FLASK_DB_HOST: postgres
+      FLASK_DB_PORT: 5432
+    expose:
+      - "5000"
+    depends_on:
+      - postgres
+      - backend-1
+    restart: always
+    networks:
+      - guess-net
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: guess-game-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: secretpass
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - guess-net
+
+volumes:
+  postgres_data:
+
+networks:
+  guess-net:
+    driver: bridge
