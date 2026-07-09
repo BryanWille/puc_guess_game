@@ -13,10 +13,21 @@ spec:
       labels:
         app: backend
     spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h postgres -p 5432 -U guessgame; do
+                echo "Waiting for PostgreSQL..."
+                sleep 2
+              done
       containers:
         - name: backend
           image: docker.io/bryanwille/guess-game-backend:1.0.0
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 5000
           envFrom:

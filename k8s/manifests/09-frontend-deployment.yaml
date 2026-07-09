@@ -16,7 +16,7 @@ spec:
       containers:
         - name: frontend
           image: docker.io/bryanwille/guess-game-frontend:1.0.0
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Always
           ports:
             - containerPort: 80
           resources:
