@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: {{ .Values.namespace }}
+data:
+  FLASK_APP: run.py
+  FLASK_DB_TYPE: postgres
+  FLASK_DB_NAME: {{ .Values.postgres.database | quote }}
+  FLASK_DB_USER: {{ .Values.postgres.user | quote }}
+  FLASK_DB_HOST: postgres

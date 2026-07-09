@@ -1,0 +1,6 @@
+apiVersion: v2
+name: guess-game
+description: Helm Chart para executar o Guess Game no Kubernetes com frontend, backend, PostgreSQL e HPA
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
