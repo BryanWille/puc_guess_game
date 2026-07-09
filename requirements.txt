@@ -5,3 +5,4 @@ psycopg2-binary==2.9.9
 opentelemetry-instrumentation-flask
 opentelemetry-distro
 opentelemetry-distro[otlp]
+gunicorn==23.0.0
