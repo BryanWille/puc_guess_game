@@ -23,6 +23,7 @@ http://localhost:3000
 
 Para executar esta entrega, a máquina precisa ter:
 
+- Git
 - Docker
 - kubectl
 - k3d
@@ -36,7 +37,22 @@ Também é possível usar a máquina/OVA disponibilizada pelo curso:
 https://storage.googleapis.com/iec-containers-orquestration/iec-containers.zip
 ```
 
-## 1.1 Instalar Docker
+## 1.1 Instalar Git
+
+Ubuntu/Debian:
+
+```bash
+sudo apt update
+sudo apt install -y git
+```
+
+Validar:
+
+```bash
+git --version
+```
+
+## 1.2 Instalar Docker
 
 Ubuntu/Debian:
 
@@ -67,7 +83,6 @@ Adicionar o usuário atual ao grupo Docker:
 
 ```bash
 sudo usermod -aG docker $USER
-sudo apt install -y util-linux-extra
 newgrp docker
 ```
 
@@ -78,7 +93,7 @@ docker ps
 docker version
 ```
 
-## 1.2 Instalar kubectl
+## 1.3 Instalar kubectl
 
 ```bash
 sudo snap install kubectl --classic
@@ -90,7 +105,7 @@ Validar:
 kubectl version --client
 ```
 
-## 1.3 Instalar k3d
+## 1.4 Instalar k3d
 
 ```bash
 curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
@@ -102,7 +117,7 @@ Validar:
 k3d version
 ```
 
-## 1.4 Instalar Helm
+## 1.5 Instalar Helm
 
 O Helm é opcional para execução, mas foi incluído como bônus na entrega.
 
@@ -132,7 +147,7 @@ git switch kubernetes
 
 # 3. Imagens Docker
 
-As imagens da aplicação estão publicadas no Docker Hub do aluno:
+As imagens da aplicação estão publicadas no Docker Hub:
 
 ```text
 docker.io/bryanwille/guess-game-backend:1.0.0
