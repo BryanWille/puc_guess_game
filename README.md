@@ -1,153 +1,561 @@
-# Jogo de Adivinhação com Flask
+# Guess Game - Kubernetes com K3D
 
-Este é um simples jogo de adivinhação desenvolvido utilizando o framework Flask. O jogador deve adivinhar uma senha criada aleatoriamente, e o sistema fornecerá feedback sobre o número de letras corretas e suas respectivas posições.
+Reimplementação da tarefa da Unidade I Docker utilizando Kubernetes.
 
-## Funcionalidades
+A aplicação é composta por:
 
-- Criação de um novo jogo com uma senha fornecida pelo usuário.
-- Adivinhe a senha e receba feedback se as letras estão corretas e/ou em posições corretas.
-- As senhas são armazenadas  utilizando base64.
-- As adivinhações incorretas retornam uma mensagem com dicas.
-  
-## Requisitos
+- Frontend React servido por NGINX.
+- Backend Flask executado com Gunicorn.
+- Banco PostgreSQL.
+- HPA no backend.
+- Manifests Kubernetes em `/k8s/manifests`.
+- Helm Chart em `/k8s/helm/guess-game`.
 
-- Python 3.8+ - 3.12
-- Flask
-- Um banco de dados local (ou um mecanismo de armazenamento configurado em `current_app.db`)
-- node 18.17.0
+O acesso principal é feito pela porta do frontend:
 
-## Instalação
+```text
+http://localhost:3000
+```
 
-1. Clone o repositório:
+---
 
-   ```bash
-   git clone https://github.com/fams/guess_game.git
-   cd guess-game
-   ```
+# 1. Requisitos básicos
 
-2. Crie um ambiente virtual e ative-o:
+Para executar esta entrega, a máquina precisa ter:
 
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate  # Linux/Mac
-   venv\Scripts\activate  # Windows
-   ```
+- Docker
+- kubectl
+- k3d
+- Helm, opcional para execução via Chart
 
-3. Instale as dependências:
+A entrega foi preparada para Kubernetes em K3D, conforme solicitado no enunciado.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+Também é possível usar a máquina/OVA disponibilizada pelo curso:
 
-4. Configure o banco de dados com as variáveis de ambiente no arquivo start-backend.sh
-    1. Para sqlite
+```text
+https://storage.googleapis.com/iec-containers-orquestration/iec-containers.zip
+```
 
-        ```bash
-            export FLASK_APP="run.py"
-            export FLASK_DB_TYPE="sqlite"            # Use SQLITE
-            export FLASK_DB_PATH="caminho/db.sqlite" # caminho do banco
-        ```
+## 1.1 Instalar Docker
 
-    2. Para Postgres
+Ubuntu/Debian:
 
-        ```bash
-            export FLASK_APP="run.py"
-            export FLASK_DB_TYPE="postgres"       # Use postgres
-            export FLASK_DB_USER="postgres"       # Usuário do banco
-            export FLASK_DB_NAME="postgres"       # Nome do Banco
-            export FLASK_DB_PASSWORD="secretpass" # Senha do banco
-            export FLASK_DB_HOST="localhost"      # Hostname
-            export FLASK_DB_PORT="5432"           # Porta
-        ```
+```bash
+sudo apt update
 
-    3. Para DynamoDB
+sudo apt install -y ca-certificates curl gnupg lsb-release
 
-        ```bash
-        export FLASK_APP="run.py"
-        export FLASK_DB_TYPE="dynamodb"       # Use postgres
-        export AWS_DEFAULT_REGION="us-east-1" # AWS region
-        export AWS_ACCESS_KEY_ID="FAKEACCESSKEY123456" 
-        export AWS_SECRET_ACCESS_KEY="FakeSecretAccessKey987654321"
-        export AWS_SESSION_TOKEN="FakeSessionTokenABCDEFGHIJKLMNOPQRSTUVXYZ1234567890"
-        ```
+sudo install -m 0755 -d /etc/apt/keyrings
 
-5. Execute o backend
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-   ```bash
-   ./start-backend.sh &
-   ```
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
-6. Cuidado! verifique se o seu linux está lendo o arquivo .sh com fim de linha do windows CRLF. Para verificar utilize o vim -b start-backend.sh
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+  https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-## Frontend
-No diretorio de frontend
+sudo apt update
 
-1. Instale o node com o nvm. Se não tiver o nvm instalado, siga o [tutorial](https://github.com/nvm-sh/nvm?tab=readme-ov-file#installing-and-updating)
+sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+```
 
-    ```bash
-    nvm install 18.17.0
-    nvm use 18.17.0
-    # Habilite o yarn
-    corepack enable
-    ```
+Adicionar o usuário atual ao grupo Docker:
 
-2. Instale as dependências do node com o npm:
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
 
-    ```bash
-    npm install
-    ```
+Validar:
 
-3. Exporte a url onde está executando o backend e execute o backend.
+```bash
+docker ps
+docker version
+```
 
-   ```bash
-    export REACT_APP_BACKEND_URL=http://localhost:5000
-    yarn start
-   ```
+## 1.2 Instalar kubectl
 
-## Como Jogar
+```bash
+sudo snap install kubectl --classic
+```
 
-### 1. Criar um novo jogo
+Validar:
 
-Acesse a url do frontend http://localhost:3000
+```bash
+kubectl version --client
+```
 
-Digite uma frase secreta
+## 1.3 Instalar k3d
 
-Envie
+```bash
+curl -s https://raw.githubusercontent.com/k3d-io/k3d/main/install.sh | bash
+```
 
-Salve o game-id
+Validar:
 
+```bash
+k3d version
+```
 
-### 2. Adivinhar a senha
+## 1.4 Instalar Helm
 
-Acesse a url do frontend http://localhost:3000
+O Helm é opcional para execução, mas foi incluído como bônus na entrega.
 
-Vá para o endponint breaker
+```bash
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+```
 
-entre com o game_id que foi gerado pelo Creator
+Validar:
 
-Tente adivinhar
+```bash
+helm version
+```
 
-## Estrutura do Código
+---
 
-### Rotas:
+# 2. Clonar o repositório
 
-- **`/create`**: Cria um novo jogo. Armazena a senha codificada em base64 e retorna um `game_id`.
-- **`/guess/<game_id>`**: Permite ao usuário adivinhar a senha. Compara a adivinhação com a senha armazenada e retorna o resultado.
+```bash
+git clone https://github.com/BryanWille/puc_guess_game.git
 
-### Classes Importantes:
+cd puc_guess_game
 
-- **`Guess`**: Classe responsável por gerenciar a lógica de comparação entre a senha e a tentativa do jogador.
-- **`WrongAttempt`**: Exceção personalizada que é levantada quando a tentativa está incorreta.
+git switch kubernetes
+```
 
+---
 
+# 3. Imagens Docker
 
-## Melhorias Futuras
+As imagens da aplicação estão publicadas no Docker Hub do aluno:
 
-- Implementar autenticação de usuário para salvar e carregar jogos.
-- Adicionar limite de tentativas.
-- Melhorar a interface de feedback para as tentativas de adivinhação.
+```text
+docker.io/bryanwille/guess-game-backend:1.0.0
+docker.io/bryanwille/guess-game-frontend:1.0.0
+```
 
-## Licença
+Durante a avaliação, não é necessário reconstruir as imagens.
 
-Este projeto está licenciado sob a [MIT License](LICENSE).
+Para validar que as imagens estão disponíveis:
 
+```bash
+docker manifest inspect docker.io/bryanwille/guess-game-backend:1.0.0 > /dev/null && echo "backend dockerhub OK"
+
+docker manifest inspect docker.io/bryanwille/guess-game-frontend:1.0.0 > /dev/null && echo "frontend dockerhub OK"
+```
+
+---
+
+# 4. Criar cluster K3D
+
+O frontend deve ser acessado em:
+
+```text
+http://localhost:3000
+```
+
+Para isso, o cluster K3D deve mapear a porta local `3000` para o `NodePort 30080` do Service do frontend:
+
+```bash
+k3d cluster create puc-k8s --agents 2 -p "3000:30080@server:0"
+```
+
+Validar o cluster:
+
+```bash
+kubectl cluster-info
+
+kubectl get nodes
+```
+
+Resultado esperado:
+
+```text
+k3d-puc-k8s-server-0   Ready
+k3d-puc-k8s-agent-0    Ready
+k3d-puc-k8s-agent-1    Ready
+```
+
+---
+
+# 5. Executar aplicação com manifests Kubernetes
+
+Aplicar todos os objetos Kubernetes:
+
+```bash
+kubectl apply -k k8s/manifests
+```
+
+Acompanhar os pods:
+
+```bash
+kubectl -n guess-game get pods -w
+```
+
+Quando todos os pods estiverem `Running`, pressione `Ctrl+C`.
+
+Validar recursos criados:
+
+```bash
+kubectl -n guess-game get pods
+
+kubectl -n guess-game get svc
+
+kubectl -n guess-game get hpa
+
+kubectl -n guess-game get deployments
+```
+
+Resultado esperado dos Services:
+
+```text
+backend    ClusterIP
+frontend   NodePort    80:30080/TCP
+postgres   ClusterIP
+```
+
+Resultado esperado do HPA:
+
+```text
+backend-hpa   Deployment/backend   MINPODS 2   MAXPODS 5
+```
+
+---
+
+# 6. Acessar a aplicação
+
+Health check:
+
+```bash
+curl http://localhost:3000/health
+```
+
+Resultado esperado:
+
+```json
+{"status":"ok"}
+```
+
+Acesso pelo navegador:
+
+```text
+http://localhost:3000
+```
+
+Rotas principais:
+
+```text
+http://localhost:3000/maker
+http://localhost:3000/breaker
+```
+
+---
+
+# 7. Teste funcional
+
+## 7.1 Criar jogo
+
+Acesse:
+
+```text
+http://localhost:3000/maker
+```
+
+Digite uma senha e clique em criar.
+
+O sistema retornará um `game_id`.
+
+## 7.2 Adivinhar senha
+
+Acesse:
+
+```text
+http://localhost:3000/breaker
+```
+
+Informe o `game_id` gerado e tente adivinhar a senha.
+
+---
+
+# 8. Arquitetura da solução
+
+```text
+Navegador
+   |
+   | http://localhost:3000
+   |
+K3D port mapping
+   |
+   | localhost:3000 -> NodePort 30080
+   |
+Service frontend - NodePort
+   |
+Deployment frontend - React + NGINX
+   |
+   | proxy reverso para /create, /guess e /health
+   |
+Service backend - ClusterIP
+   |
+Deployment backend - Flask + Gunicorn
+   |
+Service postgres - ClusterIP
+   |
+Deployment postgres + PVC
+```
+
+O frontend é o único componente exposto para acesso externo.
+
+O backend e o PostgreSQL ficam acessíveis apenas dentro do cluster.
+
+---
+
+# 9. Componentes Kubernetes instalados
+
+| Componente | Tipo | Arquivo | Descrição |
+|---|---|---|---|
+| `guess-game` | Namespace | `00-namespace.yaml` | Namespace isolado da aplicação. |
+| `postgres-secret` | Secret | `01-postgres-secret.yaml` | Armazena usuário, senha e database do PostgreSQL. |
+| `postgres-pvc` | PersistentVolumeClaim | `02-postgres-pvc.yaml` | Volume persistente para dados do PostgreSQL. |
+| `postgres` | Deployment | `03-postgres-deployment.yaml` | Executa o banco PostgreSQL. |
+| `postgres` | Service ClusterIP | `04-postgres-service.yaml` | Expõe o PostgreSQL internamente. |
+| `backend-config` | ConfigMap | `05-backend-configmap.yaml` | Configura variáveis do backend. |
+| `backend` | Deployment | `06-backend-deployment.yaml` | Executa a API Flask com Gunicorn. |
+| `backend` | Service ClusterIP | `07-backend-service.yaml` | Expõe a API internamente para o frontend. |
+| `backend-hpa` | HorizontalPodAutoscaler | `08-backend-hpa.yaml` | Autoscaling horizontal do backend. |
+| `frontend` | Deployment | `09-frontend-deployment.yaml` | Executa o frontend React servido por NGINX. |
+| `frontend` | Service NodePort | `10-frontend-service.yaml` | Expõe o frontend via NodePort `30080`. |
+| `kustomization` | Kustomize | `kustomization.yaml` | Permite aplicar todos os manifests com `kubectl apply -k`. |
+
+---
+
+# 10. HPA do backend
+
+O autoscaling horizontal foi implementado para o backend no arquivo:
+
+```text
+k8s/manifests/08-backend-hpa.yaml
+```
+
+Configuração:
+
+```text
+minReplicas: 2
+maxReplicas: 5
+averageUtilization: 60%
+```
+
+Verificar HPA:
+
+```bash
+kubectl -n guess-game get hpa backend-hpa
+
+kubectl -n guess-game describe hpa backend-hpa
+```
+
+O HPA escala o Deployment `backend` com base no consumo de CPU.
+
+---
+
+# 11. Estrutura da entrega
+
+Todos os objetos Kubernetes estão dentro de `/k8s`, conforme solicitado.
+
+```text
+.
+├── Dockerfile.backend
+├── Dockerfile.frontend
+├── frontend/
+├── guess/
+├── repository/
+├── requirements.txt
+├── run.py
+└── k8s/
+    ├── manifests/
+    │   ├── 00-namespace.yaml
+    │   ├── 01-postgres-secret.yaml
+    │   ├── 02-postgres-pvc.yaml
+    │   ├── 03-postgres-deployment.yaml
+    │   ├── 04-postgres-service.yaml
+    │   ├── 05-backend-configmap.yaml
+    │   ├── 06-backend-deployment.yaml
+    │   ├── 07-backend-service.yaml
+    │   ├── 08-backend-hpa.yaml
+    │   ├── 09-frontend-deployment.yaml
+    │   ├── 10-frontend-service.yaml
+    │   └── kustomization.yaml
+    └── helm/
+        └── guess-game/
+            ├── Chart.yaml
+            ├── values.yaml
+            └── templates/
+```
+
+---
+
+# 12. Execução alternativa com port-forward
+
+O acesso principal desta entrega usa `NodePort`.
+
+Também é possível acessar via port-forward:
+
+```bash
+kubectl -n guess-game port-forward svc/frontend 3000:80
+```
+
+Acesso:
+
+```text
+http://localhost:3000
+```
+
+Neste modo, o terminal precisa permanecer aberto enquanto a aplicação estiver sendo usada.
+
+---
+
+# 13. Execução alternativa com Helm Chart
+
+O Helm Chart está em:
+
+```text
+k8s/helm/guess-game
+```
+
+Instalar via Helm:
+
+```bash
+helm upgrade --install guess-game k8s/helm/guess-game
+```
+
+Validar:
+
+```bash
+kubectl -n guess-game get pods
+
+kubectl -n guess-game get svc
+
+kubectl -n guess-game get hpa
+```
+
+Remover instalação via Helm:
+
+```bash
+helm uninstall guess-game -n guess-game
+```
+
+---
+
+# 14. Remover aplicação
+
+Remover os manifests:
+
+```bash
+kubectl delete -k k8s/manifests
+```
+
+Remover o cluster K3D:
+
+```bash
+k3d cluster delete puc-k8s
+```
+
+---
+
+# 15. Build das imagens
+
+Esta etapa não é necessária para avaliação, pois as imagens já estão publicadas no Docker Hub.
+
+Caso seja necessário reconstruir manualmente:
+
+```bash
+docker build -t docker.io/bryanwille/guess-game-backend:1.0.0 -f Dockerfile.backend .
+
+docker build -t docker.io/bryanwille/guess-game-frontend:1.0.0 -f Dockerfile.frontend .
+```
+
+Publicar no Docker Hub:
+
+```bash
+docker login
+
+docker push docker.io/bryanwille/guess-game-backend:1.0.0
+
+docker push docker.io/bryanwille/guess-game-frontend:1.0.0
+```
+
+---
+
+# 16. Troubleshooting
+
+## Ver pods
+
+```bash
+kubectl -n guess-game get pods
+```
+
+## Descrever pods do backend
+
+```bash
+kubectl -n guess-game describe pod -l app=backend
+```
+
+## Logs do backend
+
+```bash
+kubectl -n guess-game logs -l app=backend --tail=100
+```
+
+## Logs do frontend
+
+```bash
+kubectl -n guess-game logs -l app=frontend --tail=100
+```
+
+## Logs do PostgreSQL
+
+```bash
+kubectl -n guess-game logs -l app=postgres --tail=100
+```
+
+## Ver Services
+
+```bash
+kubectl -n guess-game get svc
+```
+
+## Reaplicar manifests
+
+```bash
+kubectl apply -k k8s/manifests
+```
+
+## Reiniciar backend
+
+```bash
+kubectl -n guess-game rollout restart deployment/backend
+```
+
+## Reiniciar frontend
+
+```bash
+kubectl -n guess-game rollout restart deployment/frontend
+```
+
+---
+
+# 17. Observações finais
+
+- O sistema foi reimplementado em Kubernetes.
+- A execução principal usa K3D.
+- O frontend é acessado em `http://localhost:3000`.
+- O frontend é exposto via `NodePort`.
+- O backend possui HPA configurado.
+- O backend e o PostgreSQL usam `ClusterIP`.
+- Não é necessário Ingress Controller.
+- As imagens estão no Docker Hub do aluno.
+- Não é necessário reconstruir imagens durante a avaliação.
+- Todos os objetos Kubernetes estão em `/k8s`.
+- Foi incluído Helm Chart como bônus.
