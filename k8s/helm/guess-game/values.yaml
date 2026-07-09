@@ -28,9 +28,9 @@ frontend:
     pullPolicy: Always
   replicas: 1
   service:
-    type: ClusterIP
-    port: 3000
-    nodePort: null
+    type: NodePort
+    port: 80
+    nodePort: 30080
   resources:
     requests:
       cpu: 50m

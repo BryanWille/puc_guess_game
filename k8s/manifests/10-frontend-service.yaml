@@ -4,10 +4,11 @@ metadata:
   name: frontend
   namespace: guess-game
 spec:
-  type: ClusterIP
+  type: NodePort
   selector:
     app: frontend
   ports:
     - name: http
-      port: 3000
+      port: 80
       targetPort: 80
+      nodePort: 30080
