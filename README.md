@@ -571,7 +571,7 @@ kubectl -n guess-game rollout restart deployment/frontend
 - O backend possui HPA configurado.
 - O backend e o PostgreSQL usam `ClusterIP`.
 - Não é necessário Ingress Controller.
-- As imagens estão no Docker Hub do aluno.
+- As imagens estão no Docker Hub.
 - Não é necessário reconstruir imagens durante a avaliação.
 - Todos os objetos Kubernetes estão em `/k8s`.
 - Foi incluído Helm Chart como bônus.
