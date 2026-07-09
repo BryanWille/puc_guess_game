@@ -67,6 +67,7 @@ Adicionar o usuário atual ao grupo Docker:
 
 ```bash
 sudo usermod -aG docker $USER
+sudo apt install -y util-linux-extra
 newgrp docker
 ```
 
